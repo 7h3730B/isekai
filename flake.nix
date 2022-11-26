@@ -1,17 +1,20 @@
 {
   description = "Shared modules / pkgs for my NixOS configs";
 
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.05";
-  };
+  inputs = {};
 
-  outputs = { self, nixpkgs }@inputs:
+  outputs = { self, ... }@inputs:
   with builtins; {
-    nixosModules = listToAttrs (map
-    (x: {
-      name = x;
-      value = import (./modules + "/${x}");
-    })
-    (attrNames (readDir ./modules)));
+    # allows to import just modules needed or all modules if wanted
+    nixosModules =
+      let modules = listToAttrs (map
+        (x: {
+          name = x;
+          value = import (./modules + "/${x}");
+        })
+        (attrNames (readDir ./modules)));
+      in modules // {
+        default = { imports = attrValues modules; };
+      };
   };
 }
